@@ -8,14 +8,15 @@ Parses an Apple Credit Card PDF statement and outputs a CSV file
 
 import argparse
 import csv
+import decimal
 import re
 import sys
 
 import PyPDF2
 
-TRANSACTION_PATTERN = (r'(?P<date>\d{2}/\d{2}/\d{4})\s+'
-                       r'(?P<description>.*)\s+\d+%\s+\$\d+\.\d{2}\s+'
-                       r'(?P<amount>\$\d+\.\d{2})')
+TRANSACTION_PATTERN = (r'(?P<Date>\d{2}/\d{2}/\d{4})\s+'
+                       r'(?P<Description>.*)\s+\d+%\s+\$\d+\.\d{2}\s+'
+                       r'(?P<Amount>\$\d+\.\d{2})')
 
 def get_transactions(pdf_filename):
     pdf = PyPDF2.PdfFileReader(pdf_filename)
@@ -34,6 +35,18 @@ def get_transactions(pdf_filename):
     return transactions
 
 
+def format_for_ynab(transaction):
+    ynab_transaction = dict()
+
+    ynab_transaction['Date'] = transaction['Date']
+    ynab_transaction['Payee'] = transaction['Description']
+    ynab_transaction['Memo'] = ''
+    ynab_transaction['Amount'] = decimal.Decimal(re.sub(r'[^-\d.]', '',
+                                                        transaction['Amount']))
+
+    return ynab_transaction
+
+
 def write_csv(transactions, csv_filename):
     with open(csv_filename, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=transactions[0].keys())
@@ -47,8 +60,9 @@ def write_csv(transactions, csv_filename):
 def apple_cc(pdf_filename, csv_filename):
     transactions = get_transactions(pdf_filename)
 
-    if csv_filename:
-        write_csv(transactions, csv_filename)
+    transactions = list(map(format_for_ynab, transactions))
+
+    write_csv(transactions, csv_filename)
 
 
 if __name__ == '__main__':
@@ -70,7 +84,7 @@ if __name__ == '__main__':
                             help="Apple Credit Card statment (PDF)",
                             type=str)
 
-        parser.add_argument('--csvfile',
+        parser.add_argument('csvfile',
                             help="CSV output file",
                             type=str)
 
