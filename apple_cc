@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+apple_cc
+
+Parses an Apple Credit Card PDF statement and outputs a CSV file
+"""
+
+import sys
+import argparse
+import PyPDF2
+import re
+
+TRANSACTION_PATTERN = (r'(?P<date>\d{2}/\d{2}/\d{4})\s+'
+                       r'(?P<description>.*)\s+\d+%\s+\$\d+\.\d{2}\s+'
+                       r'(?P<amount>\$\d+\.\d{2})')
+
+def get_transactions(pdf_filename):
+    pdf = PyPDF2.PdfFileReader(pdf_filename)
+
+    transactions = list()
+
+    for page_num in range(0, pdf.getNumPages()):
+        page = pdf.getPage(page_num)
+
+        text = page.extractText()
+
+        t_regex = re.compile(TRANSACTION_PATTERN)
+
+        transactions.extend([m.groupdict() for m in t_regex.finditer(text)])
+
+    return transactions
+
+
+def apple_cc(pdf_filename, output_filename):
+    transactions = get_transactions(pdf_filename)
+
+    print(transactions)
+
+if __name__ == '__main__':
+    def main(cmdln_args):
+        """
+        Set up and parse arguments
+
+        Arguments:
+            cmdln_args: List of command line arguments (excluding script name)
+        """
+
+        # Parse arguments with argparse
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter
+
+        parser = argparse.ArgumentParser(description=__doc__,
+                                         formatter_class=formatter_class)
+
+        parser.add_argument('pdffile',
+                            help="Apple Credit Card statment (PDF)",
+                            type=str)
+
+        parser.add_argument('--csvfile',
+                            help="CSV output file",
+                            type=str)
+
+        args = parser.parse_args(cmdln_args)
+
+        apple_cc(args.pdffile, args.csvfile)
+
+    # Call main() with parsed args
+    sys.exit(main(sys.argv[1:]))
