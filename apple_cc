@@ -6,10 +6,12 @@ apple_cc
 Parses an Apple Credit Card PDF statement and outputs a CSV file
 """
 
-import sys
 import argparse
-import PyPDF2
+import csv
 import re
+import sys
+
+import PyPDF2
 
 TRANSACTION_PATTERN = (r'(?P<date>\d{2}/\d{2}/\d{4})\s+'
                        r'(?P<description>.*)\s+\d+%\s+\$\d+\.\d{2}\s+'
@@ -32,10 +34,22 @@ def get_transactions(pdf_filename):
     return transactions
 
 
-def apple_cc(pdf_filename, output_filename):
+def write_csv(transactions, csv_filename):
+    with open(csv_filename, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=transactions[0].keys())
+
+        writer.writeheader()
+
+        for transaction in transactions:
+            writer.writerow(transaction)
+
+
+def apple_cc(pdf_filename, csv_filename):
     transactions = get_transactions(pdf_filename)
 
-    print(transactions)
+    if csv_filename:
+        write_csv(transactions, csv_filename)
+
 
 if __name__ == '__main__':
     def main(cmdln_args):
