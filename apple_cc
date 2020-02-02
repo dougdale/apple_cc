@@ -41,7 +41,7 @@ def format_for_ynab(transaction):
     ynab_transaction['Date'] = transaction['Date']
     ynab_transaction['Payee'] = transaction['Description']
     ynab_transaction['Memo'] = ''
-    ynab_transaction['Amount'] = decimal.Decimal(re.sub(r'[^-\d.]', '',
+    ynab_transaction['Amount'] = -decimal.Decimal(re.sub(r'[^-\d.]', '',
                                                         transaction['Amount']))
 
     return ynab_transaction
