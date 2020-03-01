@@ -16,7 +16,7 @@ import PyPDF2
 
 TRANSACTION_PATTERN = (r'(?P<Date>\d{2}/\d{2}/\d{4})\s+'
                        r'(?P<Description>.*)\n(\d+%\s+\$\d+\.\d{2}\s+)?'
-                       r'(?P<Amount>-?\$\d+\.\d{2})')
+                       r'(?P<Amount>-?\$[\d,]+\.\d{2})')
 
 def get_transactions(pdf_filename):
     pdf = PyPDF2.PdfFileReader(pdf_filename)
